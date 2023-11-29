@@ -1,0 +1,22 @@
+model:
+  category: "category"
+  category_path: "out/model_100_10_1e-06_conf-1-category/epoch_21.pth" # In case that the category model is pretrained.
+  joint: true # joint training. The category path above is ignored.
+  scoring: "scoring_joint"
+  input_dim: 128
+  out_dim: 128
+  num_layers: 3
+  num_classes: 7
+  dropout_rate: 0.5
+  is_norm: false
+  num_cms: 3
+  cms: ['aasist_ssl', 'vocosig', 'btse_wav2vec']
+loss:
+  name: "Loss_category_class_CE"
+  lambda_cate: 0.5
+  lambda_class: 0.5
+data:
+  name: "data_utils_LA_attack"
+  score_path: "scores/la2019/"
+  audio_dir: "DATA/asvspoof2019"
+

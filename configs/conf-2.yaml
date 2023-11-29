@@ -1,7 +1,7 @@
 model:
   category: "category"
   category_path: "out/model_100_10_1e-06_conf-1-category/epoch_21.pth" # In case that the category model is pretrained.
-  joint: true # freeze the category model, use it pretrained.
+  joint: true # joint training. The category path above is ignored.
   scoring: "scoring_joint"
   input_dim: 128
   out_dim: 128
@@ -10,6 +10,7 @@ model:
   dropout_rate: 0.5
   is_norm: false
   num_cms: 2
+  cms: ['aasist_ssl', 'vocosig']
 loss:
   name: "Loss_category_class_CE"
   lambda_cate: 0.5

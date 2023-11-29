@@ -17,7 +17,7 @@ import time
 from model.loss_metrics import Loss_category_class_CE, Loss_category_CE
 from tensorboardX import SummaryWriter
 
-from score import Score
+from datautils.score import Score
 
 __author__ = "PhucDT"
 __reference__ = "Hemlata Tak"
@@ -297,9 +297,9 @@ if __name__ == '__main__':
     
     # score function
     if (args.score_path):
-        score = Score(score_path=args.score_path)
+        score = Score(score_path=args.score_path, CMS=config['model']['cms'])
     else:
-        score = Score(score_path=config['data']['score_path'])
+        score = Score(score_path=config['data']['score_path'], CMS=config['model']['cms'])
     get_cm_scores = score.get_cm_scores
     
     # dynamic load datautils based on name in config file
@@ -335,6 +335,7 @@ if __name__ == '__main__':
     
     if torch.cuda.device_count() > 1:
         category_model = nn.DataParallel(category_model)
+        scoring_model = nn.DataParallel(scoring_model)
         
     #evaluation 
     if args.eval:
