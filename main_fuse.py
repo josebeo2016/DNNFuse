@@ -7,6 +7,7 @@ from torch import nn
 from torch import Tensor
 from torch.utils.data import DataLoader
 import yaml
+from tqdm import tqdm
 
 from model.category import Model as category
 from model.scoring import Model as scoring
@@ -152,7 +153,7 @@ def produce_evaluation_file(dataset, batch_size, scoring_model, category_model, 
         scoring_model.eval()
         category_model.eval()
     
-    for batch_x, batch_score, utt_id in data_loader:
+    for batch_x, batch_score, utt_id in tqdm(data_loader):
         fname_list = []
         score_list = []
         loss_value = 0.0
@@ -326,11 +327,31 @@ if __name__ == '__main__':
     
     
     if args.scoring_model:
-        scoring_model.load_state_dict(torch.load(args.scoring_model,map_location=device))
+        try:
+            scoring_model.load_state_dict(torch.load(args.scoring_model,map_location=device))
+        except:
+            # fix unexpected key error with module. prefix
+            state_dict = torch.load(args.scoring_model,map_location=device)
+            new_state_dict = {}
+            for k, v in state_dict.items():
+                if 'module.' in k:
+                    k = k.replace('module.', '')
+                new_state_dict[k] = v
+            scoring_model.load_state_dict(new_state_dict)
         print('Scoring Model loaded : {}'.format(args.scoring_model))
         
     if args.category_model:
-        category_model.load_state_dict(torch.load(args.category_model,map_location=device))
+        try:
+            category_model.load_state_dict(torch.load(args.category_model,map_location=device))
+        except:
+            # fix unexpected key error with module. prefix
+            state_dict = torch.load(args.category_model,map_location=device)
+            new_state_dict = {}
+            for k, v in state_dict.items():
+                if 'module.' in k:
+                    k = k.replace('module.', '')
+                new_state_dict[k] = v
+            category_model.load_state_dict(new_state_dict)
         print('Category Model loaded : {}'.format(args.category_model))
     
     if torch.cuda.device_count() > 1:
@@ -373,7 +394,7 @@ if __name__ == '__main__':
     # Training and validation 
     num_epochs = args.num_epochs
     writer = SummaryWriter('logs/{}'.format(model_tag))
-    early_stopping = EarlyStop(patience=10, delta=0, init_best=0.2, save_dir=model_save_path)
+    early_stopping = EarlyStop(patience=10, delta=0.0001, init_best=0.01, save_dir=model_save_path)
     start_train_time = time.time()
     for epoch in range(num_epochs):
         print('Epoch {}/{}. Current LR: {}'.format(epoch, num_epochs - 1, optimizer.param_groups[0]['lr']))

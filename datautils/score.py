@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 # from .systems import CMS
+from systems import aasist_ssl_detect, vocosig_detect, btse_wav2vec_detect
 import os
 import pandas as pd
 import time
@@ -29,8 +30,9 @@ class Score:
                 self.cm_df[cm] = pd.read_csv(os.path.join(score_path, cm + ".txt"), sep=" ", header=None)
                 self.cm_df[cm].columns = ["utt_id", "spoof", "bonafide"]
                 # make index column
-                self.cm_df[cm]["index"] = self.cm_df[cm]['utt_id'].apply(lambda x: int(x.split("/")[-1].split(".")[0].split("_")[-1]))
-                self.cm_df[cm].set_index("index", inplace=True)
+                # self.cm_df[cm]["index"] = self.cm_df[cm]['utt_id'].apply(lambda x: int(x.split("/")[-1].split(".")[0].split("_")[-1]))
+                # self.cm_df[cm].set_index("index", inplace=True)
+                # self.cm_df[cm].set_index("utt_id", inplace=True)
                 # print(self.cm_df[cm].head)
 
         print("Finished loading score function")
@@ -44,12 +46,12 @@ class Score:
         for cm in self.CMS:
             if (self.cm_mode[cm] == 'offline') and len(self.cm_df[cm][self.cm_df[cm]["utt_id"] == utt_id])>0:
                 # get index:
-                index = utt_id.split("/")[-1].split(".")[0].split("_")[-1]
+                # index = utt_id.split("/")[-1].split(".")[0].split("_")[-1]
                 df = self.cm_df[cm]
-                # cm_scores.append(df[df["utt_id"] == utt_id][["spoof", "bonafide"]].values[0])
-                scors = df.loc[[int(index)]][["spoof", "bonafide"]].values[0]
-                # append to cm_scores
-                cm_scores.append(scors)
+                cm_scores.append(df[df["utt_id"] == utt_id][["spoof", "bonafide"]].values[0])
+                # scors = df.loc[[int(index)]][["spoof", "bonafide"]].values[0]
+                # # append to cm_scores
+                # cm_scores.append(scors)
             else:
                 print("Calculate %s score online for %s" % (cm, utt_id))
                 exec("cm_scores.append(%s_detect('%s'))" % (cm, os.path.join(data_dir, utt_id)))
