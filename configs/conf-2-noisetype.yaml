@@ -17,6 +17,6 @@ loss:
   lambda_class: 0.5
 data:
   name: "data_utils_noise"
-  score_path: "scores/supcon_nov22"
+  score_path: "scores/nov22_supcon_nov22"
   audio_dir: "DATA/supcon_nov22"
 
