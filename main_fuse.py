@@ -394,7 +394,7 @@ if __name__ == '__main__':
     # Training and validation 
     num_epochs = args.num_epochs
     writer = SummaryWriter('logs/{}'.format(model_tag))
-    early_stopping = EarlyStop(patience=10, delta=0.0001, init_best=0.01, save_dir=model_save_path)
+    early_stopping = EarlyStop(patience=10, delta=0.0001, init_best=0.04, save_dir=model_save_path)
     start_train_time = time.time()
     for epoch in range(num_epochs):
         print('Epoch {}/{}. Current LR: {}'.format(epoch, num_epochs - 1, optimizer.param_groups[0]['lr']))
