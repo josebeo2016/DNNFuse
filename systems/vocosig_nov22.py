@@ -20,8 +20,9 @@ config = os.path.join(BASE_DIR,'scl_vocosig/configs/conf-5-linear.yaml')
 # load config file
 config = yaml.load(open(config, 'r'), Loader=yaml.FullLoader)
 model = Model(config['model'], device, is_train=False).to(device)
+model = nn.DataParallel(model).to(device)
 model.load_state_dict(torch.load(model_path,map_location=device))
-# model = nn.DataParallel(model).to(device)
+
 # model.load_state_dict(torch.load(model_path,map_location=device), strict=False)
 model.eval()
 

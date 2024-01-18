@@ -17,7 +17,7 @@ threshold = 1.47
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 model = Model(None, device).to(device)
-# model = nn.DataParallel(model).to(device)
+model = nn.DataParallel(model).to(device)
 model.load_state_dict(torch.load(model_path,map_location=device), strict=False)
 model.eval()
 

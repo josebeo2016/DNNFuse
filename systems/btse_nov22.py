@@ -20,6 +20,8 @@ with open(config_path, 'r') as f_yaml:
     parser1 = yaml.safe_load(f_yaml)
 
 model = Model(parser1['model'], device).to(device)
+model = nn.DataParallel(model).to(device)
+
 model.load_state_dict(torch.load(model_path,map_location=device))
 model.eval()
 
