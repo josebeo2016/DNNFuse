@@ -109,33 +109,34 @@ def evaluate_accuracy(dev_loader, scoring_model, category_model, device, loss_fu
     else:
         scoring_model.eval()
         category_model.eval()
-    for batch_x, batch_score, batch_class, batch_cate in dev_loader:
-        loss_value = 0.0
-        batch_size = batch_x.size(0)
-        num_total += batch_size
-        
-        batch_x = batch_x.to(device)
-        batch_score = batch_score.to(device)
-        batch_class = batch_class.view(-1).type(torch.int64).to(device)
-        batch_cate = batch_cate.view(-1).type(torch.int64).to(device)
-        if config['model']['joint']:
-            batch_out, batch_cate_pred = scoring_model(batch_score, batch_x)
-        else:
-            with torch.no_grad():
-                batch_cate_pred, batch_emb = category_model(batch_x)
-            batch_out = scoring_model(batch_score, batch_emb)
-
-        if (config['model']['joint']):
-            losses = loss_func(batch_cate_pred, batch_cate, batch_out, batch_class)
-        else:
-            losses = loss_func(batch_out, batch_class)
+    with torch.no_grad():
+        for batch_x, batch_score, batch_class, batch_cate in dev_loader:
+            loss_value = 0.0
+            batch_size = batch_x.size(0)
+            num_total += batch_size
             
-        for key, value in losses.items():
-            loss_value += value
-            val_loss_detail[key] = val_loss_detail.get(key, 0) + value.item()
-        val_loss+=loss_value.item()
-        _, batch_pred = batch_out.max(dim=1)
-        num_correct += (batch_pred == batch_class).sum(dim=0).item()
+            batch_x = batch_x.to(device)
+            batch_score = batch_score.to(device)
+            batch_class = batch_class.view(-1).type(torch.int64).to(device)
+            batch_cate = batch_cate.view(-1).type(torch.int64).to(device)
+            if config['model']['joint']:
+                batch_out, batch_cate_pred = scoring_model(batch_score, batch_x)
+            else:
+                with torch.no_grad():
+                    batch_cate_pred, batch_emb = category_model(batch_x)
+                batch_out = scoring_model(batch_score, batch_emb)
+
+            if (config['model']['joint']):
+                losses = loss_func(batch_cate_pred, batch_cate, batch_out, batch_class)
+            else:
+                losses = loss_func(batch_out, batch_class)
+                
+            for key, value in losses.items():
+                loss_value += value
+                val_loss_detail[key] = val_loss_detail.get(key, 0) + value.item()
+            val_loss+=loss_value.item()
+            _, batch_pred = batch_out.max(dim=1)
+            num_correct += (batch_pred == batch_class).sum(dim=0).item()
         
     val_loss /= num_total
     val_accuracy = (num_correct/num_total)*100
@@ -152,38 +153,38 @@ def produce_evaluation_file(dataset, batch_size, scoring_model, category_model, 
     else:
         scoring_model.eval()
         category_model.eval()
-    
-    for batch_x, batch_score, utt_id in tqdm(data_loader):
-        fname_list = []
-        score_list = []
-        loss_value = 0.0
-        batch_size = batch_x.size(0)
-        num_total += batch_size
-        
-        batch_x = batch_x.to(device)
-        batch_score = batch_score.to(device)
-        
-        if config['model']['joint']:
-            batch_out, batch_cate_pred = scoring_model(batch_score, batch_x)
-        else:
-            with torch.no_grad():
-                batch_cate_pred, batch_emb = category_model(batch_x)
-            batch_out = scoring_model(batch_score, batch_emb)
+    with torch.no_grad():
+        for batch_x, batch_score, utt_id in tqdm(data_loader):
+            fname_list = []
+            score_list = []
+            loss_value = 0.0
+            batch_size = batch_x.size(0)
+            num_total += batch_size
             
-        # batch_out = scoring_model(batch_score, batch_emb)
-    
-        batch_logit = (batch_out[:, 1]  
-                       ).data.cpu().numpy().ravel() 
-        _, batch_pred = batch_out.max(dim=1)
-
-        # add outputs
-        fname_list.extend(utt_id)
-        score_list.extend(batch_logit.tolist())
+            batch_x = batch_x.to(device)
+            batch_score = batch_score.to(device)
+            
+            if config['model']['joint']:
+                batch_out, batch_cate_pred = scoring_model(batch_score, batch_x)
+            else:
+                with torch.no_grad():
+                    batch_cate_pred, batch_emb = category_model(batch_x)
+                batch_out = scoring_model(batch_score, batch_emb)
+                
+            # batch_out = scoring_model(batch_score, batch_emb)
         
-        with open(save_path, 'a+') as fh:
-            for f, cm in zip(fname_list,score_list):
-                fh.write('{} {}\n'.format(f, cm))
-        fh.close()   
+            batch_logit = (batch_out[:, 1]  
+                        ).data.cpu().numpy().ravel() 
+            _, batch_pred = batch_out.max(dim=1)
+
+            # add outputs
+            fname_list.extend(utt_id)
+            score_list.extend(batch_logit.tolist())
+            
+            with open(save_path, 'a+') as fh:
+                for f, cm in zip(fname_list,score_list):
+                    fh.write('{} {}\n'.format(f, cm))
+            fh.close()   
     print('Scores saved to {}'.format(save_path))
 
 if __name__ == '__main__':

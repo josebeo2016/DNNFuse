@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 # from .systems import CMS
-from systems import aasist_ssl_detect, vocosig_detect, btse_wav2vec_detect
+from systems import aasist_ssl_detect, vocosig_detect, btse_wav2vec_detect, conformer_detect
 import os
 import pandas as pd
 import time
